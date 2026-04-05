@@ -58,13 +58,30 @@
           </el-menu-item>
         </el-menu>
       </el-aside>
+
       <el-container>
         <el-header class="admin-header">
           <div class="header-right">
-            <span class="user-info">{{ user.realName }}</span>
-            <el-button link type="primary" @click="logout">退出登录</el-button>
+            <el-dropdown trigger="click" @command="handleCommand">
+              <div class="user-dropdown">
+                <el-avatar :size="36">
+                  管
+                </el-avatar>
+                <span class="user-info">{{ user?.realName || '管理员' }}</span>
+                <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+              </div>
+
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="logout">
+                    退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </el-header>
+
         <el-main class="admin-main">
           <router-view />
         </el-main>
@@ -76,11 +93,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { HomeFilled, User, OfficeBuilding, House, Tools, Money, Message, Warning, Setting, Van, Lock, UserFilled } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
+import { HomeFilled, User, OfficeBuilding, House, Tools, Money, Message, Warning,
+  Setting, Van, Lock, UserFilled, ArrowDown } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
-const user = ref(JSON.parse(localStorage.getItem('user')))
+const user = ref(JSON.parse(localStorage.getItem('user') || '{}'))
 
 const activeMenu = computed(() => {
   return route.path.split('/')[2]
@@ -96,6 +115,20 @@ const logout = () => {
   router.push('/login')
 }
 
+const handleCommand = (command) => {
+  if (command === 'logout') {
+    ElMessageBox.confirm('确定退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+      .then(() => {
+        logout()
+      })
+      .catch(() => {})
+  }
+}
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
     router.push('/login')
@@ -107,11 +140,15 @@ onMounted(() => {
 .admin-layout {
   height: 100vh;
   overflow: hidden;
+  background-color: #f5f7fa;
 }
 
 .admin-sidebar {
-  /* background-color: #001529; */
-  color: #fff;
+  background-color: #ffffff;
+  color: #333;
+  height: 100vh;
+  border-right: 1px solid #e4e7ed;
+  overflow: hidden;
 }
 
 .logo {
@@ -120,31 +157,46 @@ onMounted(() => {
   text-align: center;
   font-size: 18px;
   font-weight: bold;
-  background-color: #0d7ae0;
+  background-color: #409eff;
   color: #fff;
 }
 
 .el-menu-vertical-demo {
   border-right: none;
+  background-color: #ffffff;
+  min-height: calc(100vh - 60px);
 }
 
 .admin-header {
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  padding-right: 20px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
 }
 
 .user-info {
+  margin: 0 8px;
   font-size: 14px;
   color: #333;
+}
+
+.dropdown-icon {
+  font-size: 14px;
+  color: #666;
 }
 
 .admin-main {
